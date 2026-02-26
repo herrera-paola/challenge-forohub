@@ -21,6 +21,7 @@ public class Topico {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    private boolean activo;
     private String titulo;
     private String mensaje;
     @Column(name = "fecha_creacion")
@@ -31,11 +32,28 @@ public class Topico {
     private String curso;
 
     public Topico(@Valid DatosRegistroTopico datos) {
+        this.activo = true;
         this.titulo = datos.titulo();
         this.mensaje = datos.mensaje();
         this.fechaCreacion = LocalDateTime.now();
         this.status = StatusTopico.ABIERTO;
         this.autor = datos.autor();
         this.curso = datos.curso();
+    }
+
+    public void actualizarInformaciones(@Valid DatosActualizacionTopico datos) {
+        if (datos.titulo() != null){
+            this.titulo = datos.titulo();
+        }
+        if (datos.mensaje() != null){
+            this.mensaje = datos.mensaje();
+        }
+        if (datos.curso() != null){
+            this.curso = datos.curso();
+        }
+    }
+
+    public void eliminar(){
+        this.activo = false;
     }
 }

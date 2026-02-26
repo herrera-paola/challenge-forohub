@@ -1,16 +1,15 @@
 package foro.hub.api.controller;
 
-import foro.hub.api.domain.topico.DatosRegistroTopico;
-import foro.hub.api.domain.topico.Topico;
-import foro.hub.api.domain.topico.TopicoRepository;
+import foro.hub.api.domain.topico.*;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
 @RestController
@@ -30,4 +29,64 @@ public class TopicoController {
         return ResponseEntity.created(uri).body(topico);
     }
 
+    @GetMapping
+    public ResponseEntity<Page<DatosListaTopico>> listarTopico(@PageableDefault(size = 10, sort = {"fechaCreacion"}, direction = Sort.Direction.ASC) Pageable pageable){
+        var page = repository.findAllByActivoTrue(pageable)
+                .map(DatosListaTopico::new);
+
+        return ResponseEntity.ok(page);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity detallar(@PathVariable Long id){
+        var optionalTopico = repository.findByIdAndActivoTrue(id);
+        if (optionalTopico.isEmpty()){
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok(new DatosDetalleTopico(optionalTopico.get()));
+    }
+
+    @Transactional
+    @PutMapping("/{id}")
+    public ResponseEntity actualizar(@PathVariable Long id, @RequestBody @Valid DatosActualizacionTopico datos){
+        var optionalTopico = repository.findById(id);
+        if (optionalTopico.isEmpty()){
+            return  ResponseEntity.notFound().build();
+        }
+
+        var topico = optionalTopico.get();
+        topico.actualizarInformaciones(datos);
+
+        return ResponseEntity.ok(new DatosDetalleTopico(topico));
+    }
+
+//    @Transactional
+//    @DeleteMapping("/{id}")
+//    public ResponseEntity eliminar(@PathVariable Long id){
+//        var optionalTopico = repository.findById(id);
+//
+//        if (optionalTopico.isPresent()){
+//            return  ResponseEntity.notFound().build();
+//        }
+//
+//        repository.deleteById(id);
+//
+//        return ResponseEntity.noContent().build();
+//    }
+
+    @Transactional
+    @DeleteMapping("/{id}")
+    public ResponseEntity eliminar(@PathVariable Long id){
+        var optionalTopico = repository.findByIdAndActivoTrue(id);
+
+        if (optionalTopico.isEmpty()){
+            return  ResponseEntity.notFound().build();
+        }
+
+        var topico = optionalTopico.get();
+        topico.eliminar();
+
+        return ResponseEntity.noContent().build();
+    }
 }
