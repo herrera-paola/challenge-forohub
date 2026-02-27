@@ -1,6 +1,7 @@
 package foro.hub.api.controller;
 
 import foro.hub.api.domain.topico.*;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -14,19 +15,21 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 @RestController
 @RequestMapping("/topicos")
+@SecurityRequirement(name = "bearer-key")
 public class TopicoController {
 
     @Autowired
     private TopicoRepository repository;
 
+    @Autowired TopicoService service;
+
     @Transactional
     @PostMapping
     public ResponseEntity registrar(@Valid @RequestBody DatosRegistroTopico datos, UriComponentsBuilder uriComponentsBuilder){
-        var topico = new Topico(datos);
-        repository.save(topico);
+        var detalleTopico = service.registrar(datos);
 
-        var uri = uriComponentsBuilder.path("/topicos/{id}").buildAndExpand(topico.getId()).toUri();
-        return ResponseEntity.created(uri).body(topico);
+        var uri = uriComponentsBuilder.path("/topicos/{id}").buildAndExpand(detalleTopico.getId()).toUri();
+        return ResponseEntity.created(uri).body(detalleTopico);
     }
 
     @GetMapping
@@ -50,15 +53,9 @@ public class TopicoController {
     @Transactional
     @PutMapping("/{id}")
     public ResponseEntity actualizar(@PathVariable Long id, @RequestBody @Valid DatosActualizacionTopico datos){
-        var optionalTopico = repository.findById(id);
-        if (optionalTopico.isEmpty()){
-            return  ResponseEntity.notFound().build();
-        }
 
-        var topico = optionalTopico.get();
-        topico.actualizarInformaciones(datos);
-
-        return ResponseEntity.ok(new DatosDetalleTopico(topico));
+        var detalleActualizado = service.actualizar(id, datos);
+        return ResponseEntity.ok(detalleActualizado);
     }
 
 //    @Transactional
@@ -66,7 +63,7 @@ public class TopicoController {
 //    public ResponseEntity eliminar(@PathVariable Long id){
 //        var optionalTopico = repository.findById(id);
 //
-//        if (optionalTopico.isPresent()){
+//        if (!optionalTopico.isPresent()){
 //            return  ResponseEntity.notFound().build();
 //        }
 //

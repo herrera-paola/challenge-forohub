@@ -10,4 +10,5 @@ import java.util.Optional;
 public interface TopicoRepository extends JpaRepository<Topico, Long> {
     Page<Topico> findAllByActivoTrue(Pageable pageable);
     Optional<Topico> findByIdAndActivoTrue(Long id);
+    boolean existsByTituloAndMensaje(String titulo, String mensaje);
 }

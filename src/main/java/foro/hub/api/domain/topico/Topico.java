@@ -51,6 +51,9 @@ public class Topico {
         if (datos.curso() != null){
             this.curso = datos.curso();
         }
+        if (datos.status() != null){
+            this.status = datos.status();
+        }
     }
 
     public void eliminar(){
